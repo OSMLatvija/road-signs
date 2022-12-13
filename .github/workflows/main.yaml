@@ -1,4 +1,4 @@
-name: CI
+name: Publish GitHub Pages
 
 on:
   push:
@@ -11,7 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install Python
-      run: |
-        sudo apt-get update
-        sudo apt-get install python3
+    - run: echo "<h1>Hello, world!</h1>" > index.html
+    - uses: actions/upload-pages-artifact@main
+      with:
+        path: index.html
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/deploy-pages@v1
