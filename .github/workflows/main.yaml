@@ -11,7 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: mkdir _site && echo "<h1>Hello, world!</h1>" > _site/index.html
+    - run: |-
+        mkdir _site &&
+        cd _site &&
+        python3 road-sign-extractor.py
     - uses: actions/upload-pages-artifact@main
   deploy:
     needs: build
