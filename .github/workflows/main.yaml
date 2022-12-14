@@ -14,7 +14,7 @@ jobs:
     - run: |-
         mkdir _site &&
         cd _site &&
-        python3 ../road-sign-extractor.py
+        ../road-sign-extractor.py
     - uses: actions/upload-pages-artifact@main
   deploy:
     needs: build
