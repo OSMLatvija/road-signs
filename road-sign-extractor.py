@@ -2,6 +2,7 @@
 
 from html import escape
 from html.parser import HTMLParser
+from itertools import chain
 from urllib.request import urlopen
 
 url = "https://likumi.lv"
@@ -75,6 +76,9 @@ def table(elements):
     tbody, = elements
     tag, _, rows = tbody
     assert tag == "tbody"
+    return rows
+
+def extract_signs(rows):
     rowspan = None
     result = []
 
@@ -132,10 +136,82 @@ def signs(elements):
             continue
 
         assert tag == "table"
-        for row in table(children):
-            yield row
 
-for number, images in signs(sign_section):
+        for sign in extract_signs(table(children)):
+            yield sign
+
+def markings(elements):
+    for element in elements:
+        assert not isinstance(element, str)
+        tag, _, children = element
+
+        if tag == "p":
+            continue
+
+        assert tag == "table"
+        numbers = {}
+        images = {}
+        columns = []
+
+        for row_number, row in enumerate(table(children)):
+            column = 0
+
+            def get_content(tag, attributes, children):
+                nonlocal column
+                assert tag == "td"
+                rowspan = int(dict(attributes).get("rowspan", 1))
+                assert rowspan != 0
+                colspan = int(dict(attributes).get("colspan", 1))
+                assert colspan != 0
+
+                while column < len(columns) and columns[column] > 0:
+                    columns[column] -= 1
+                    column += 1
+
+                content, = children
+
+                if isinstance(content, str):
+                    assert rowspan == 1
+                    numbers[row_number, column, column + colspan] = content
+                else:
+                    tag, attributes, _ = content
+                    assert tag == "img"
+                    images[row_number + rowspan, column, column + colspan] = attributes
+
+                while colspan > 0:
+                    if column == len(columns):
+                        columns.append(rowspan - 1)
+                    else:
+                        assert columns[column] == 0
+                        columns[column] = rowspan - 1
+
+                    colspan -= 1
+                    column += 1
+
+            tag, _, cells = row
+            assert tag == "tr"
+
+            for cell in cells:
+                get_content(*cell)
+
+            while column < len(columns):
+                assert columns[column] > 0, columns[column]
+                columns[column] -= 1
+                column += 1
+
+        for number_cell, number in numbers.items():
+            if number.strip() == "":
+                continue
+
+            matching_images = []
+
+            for image_cell, image in images.items():
+                if number_cell[0] == image_cell[0] and number_cell[1] <= image_cell[1] and number_cell[2] >= image_cell[2]:
+                    matching_images.append(image)
+
+            yield number, matching_images
+
+for number, images in chain(signs(sign_section), markings(marking_section)):
     if len(images) > 0:
         with open(f"{number}.html", "w") as html:
             for image in images:
