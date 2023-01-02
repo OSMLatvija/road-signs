@@ -222,7 +222,7 @@ for number, images in chain(signs(sign_section), markings(marking_section)):
                     html.write(attribute)
                     html.write("=")
 
-                    if attribute == "src":
+                    if attribute == "src" and not value.startswith("http"):
                         value = url + value
 
                     html.write(f"\"{escape(value)}\"")
