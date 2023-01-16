@@ -214,8 +214,17 @@ def markings(elements):
 for number, images in chain(signs(sign_section), markings(marking_section)):
     if len(images) > 0:
         with open(f"{number}.html", "w") as html:
+            html.write("<!DOCTYPE html>")
+            html.write("<html lang=\"lv\">")
+            html.write("  <head>")
+            html.write("    <meta charset=\"UTF-8\" />")
+            html.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
+            html.write(f"    <title>{number}.</title>")
+            html.write("  </head>")
+            html.write("  <body>")
+
             for image in images:
-                html.write("<img")
+                html.write("    <img")
 
                 for attribute, value in image:
                     html.write(" ")
@@ -228,3 +237,6 @@ for number, images in chain(signs(sign_section), markings(marking_section)):
                     html.write(f"\"{escape(value)}\"")
 
                 html.write("/>\n")
+
+            html.write("  </body>")
+            html.write("</html>")
