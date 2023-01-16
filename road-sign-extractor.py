@@ -224,7 +224,7 @@ for number, images in chain(signs(sign_section), markings(marking_section)):
             html.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
             html.write(f"    <title>{number}.</title>")
             html.write(f"    <meta property=\"og:title\" content=\"{escape(number)}\" />")
-            html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(dict(images[0])["src"]))}\" />")
+            html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(dict(images[0])['src']))}\" />")
             html.write("  </head>")
             html.write("  <body>")
 
