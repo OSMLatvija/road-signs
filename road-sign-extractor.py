@@ -232,7 +232,7 @@ for number, name, images in chain(signs(sign_section), markings(marking_section)
             html.write("  <head>\n")
             html.write("    <meta charset=\"UTF-8\" />\n")
             html.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n")
-            title = f"{number}. {name}"
+            title = f"{number}." if name is None else f"{number}. {name}"
             html.write(f"    <title>{title}</title>\n")
             html.write(f"    <meta property=\"og:title\" content=\"{escape(title)}\" />\n")
             html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(dict(images[0])['src']))}\" />\n")
