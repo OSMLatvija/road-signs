@@ -87,9 +87,15 @@ def extract_signs(rows):
             assert tag == "td"
             assert "colspan" not in dict(attributes)
             text, = children
-            assert isinstance(text, str), text
-            result.append((text, []))
-            return int(dict(attributes).get("rowspan", 1))
+
+            if not isinstance(text, str):
+                t, a, c = text
+                assert t == "p", t
+                assert len(a) == 0
+                text, = c
+                assert isinstance(text, str)
+
+            return int(dict(attributes).get("rowspan", 1)), text
 
         def get_image(tag, attributes, children):
             assert tag == "td"
@@ -114,8 +120,12 @@ def extract_signs(rows):
 
         if len(cells) == 3:
             assert rowspan is None or rowspan == 0
-            number, image, _ = cells
-            rowspan = get_text(*number) - 1
+            number, image, name = cells
+            rowspan_number, number_text = get_text(*number)
+            rowspan_name, name_text = get_text(*name)
+            assert rowspan_number == rowspan_name
+            rowspan = rowspan_number - 1
+            result.append((number_text, name_text, []))
             get_image(*image)
         elif len(cells) == 1:
             assert rowspan > 0
@@ -209,27 +219,29 @@ def markings(elements):
                 if number_cell[0] == image_cell[0] and number_cell[1] <= image_cell[1] and number_cell[2] >= image_cell[2]:
                     matching_images.append(image)
 
-            yield number, matching_images
+            yield number, None, matching_images
 
 def expand(value):
     return value if value.startswith("http") else url + value
 
-for number, images in chain(signs(sign_section), markings(marking_section)):
+for number, name, images in chain(signs(sign_section), markings(marking_section)):
     if len(images) > 0:
         with open(f"{number}.html", "w") as html:
-            html.write("<!DOCTYPE html>")
-            html.write("<html lang=\"lv\">")
-            html.write("  <head>")
-            html.write("    <meta charset=\"UTF-8\" />")
-            html.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />")
-            html.write(f"    <title>{number}.</title>")
-            html.write(f"    <meta property=\"og:title\" content=\"{escape(number)}\" />")
-            html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(dict(images[0])['src']))}\" />")
-            html.write("  </head>")
-            html.write("  <body>")
+            html.write("<!DOCTYPE html>\n")
+            html.write("<html lang=\"lv\">\n")
+            html.write("  <head>\n")
+            html.write("    <meta charset=\"UTF-8\" />\n")
+            html.write("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n")
+            title = f"{number}. {name}"
+            html.write(f"    <title>{title}</title>\n")
+            html.write(f"    <meta property=\"og:title\" content=\"{escape(title)}\" />\n")
+            html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(dict(images[0])['src']))}\" />\n")
+            html.write("  </head>\n")
+            html.write("  <body>\n")
+            html.write("    <figure>\n")
 
             for image in images:
-                html.write("    <img")
+                html.write("      <img")
 
                 for attribute, value in image:
                     html.write(" ")
@@ -243,5 +255,7 @@ for number, images in chain(signs(sign_section), markings(marking_section)):
 
                 html.write("/>\n")
 
-            html.write("  </body>")
-            html.write("</html>")
+            html.write(f"      <figcaption>{title}</figcaption>\n")
+            html.write("    </figure>\n")
+            html.write("  </body>\n")
+            html.write("</html>\n")
