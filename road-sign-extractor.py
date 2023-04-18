@@ -235,7 +235,13 @@ for number, name, images in chain(signs(sign_section), markings(marking_section)
             title = f"{number}." if name is None else f"{number}. {name}"
             html.write(f"    <title>{title}</title>\n")
             html.write(f"    <meta property=\"og:title\" content=\"{escape(title)}\" />\n")
-            html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(dict(images[0])['src']))}\" />\n")
+            properties = dict(images[0])
+            html.write(f"    <meta property=\"og:image\" content=\"{escape(expand(properties['src']))}\" />\n")
+
+            for property in ("width", "height"):
+                if property in properties:
+                    html.write(f"    <meta property=\"og:image:{property}\" content=\"{escape(properties[property])}\" />\n")
+
             html.write("  </head>\n")
             html.write("  <body>\n")
             html.write("    <figure>\n")
