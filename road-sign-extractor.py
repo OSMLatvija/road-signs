@@ -62,6 +62,19 @@ def extract(elements):
             yield children
             interesting = False
 
+        if len(children) > 0:
+            first, *_ = children
+
+            if not isinstance(first, str):
+                t, a, _ = first
+
+                if t == "a":
+                    attributes = dict(a)
+
+                    if "name" in attributes and attributes["name"] == "p298":
+                        interesting = True
+                        continue
+
         strings = [child for child in children if isinstance(child, str)]
 
         if len(strings) == 1:
@@ -70,13 +83,16 @@ def extract(elements):
             if text in ("Ceļa zīmes", "Ceļa apzīmējumi"):
                 interesting = True
 
-sign_section, marking_section = extract(body(*root))
+p298_section, sign_section, marking_section = extract(body(*root))
 
 def table(elements):
-    tbody, = elements
-    tag, _, rows = tbody
-    assert tag == "tbody"
-    return rows
+    if len(elements) == 1:
+        tbody, = elements
+        tag, _, rows = tbody
+        assert tag == "tbody"
+        return rows
+
+    return elements
 
 def extract_signs(rows):
     rowspan = None
@@ -224,7 +240,7 @@ def markings(elements):
 def expand(value):
     return value if value.startswith("http") else url + value
 
-for number, name, images in chain(signs(sign_section), markings(marking_section)):
+for number, name, images in chain(signs(p298_section), signs(sign_section), markings(marking_section)):
     if len(images) > 0:
         with open(f"{number}.html", "w") as html:
             html.write("<!DOCTYPE html>\n")
